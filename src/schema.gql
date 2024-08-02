@@ -1,0 +1,84 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+input CreateUserInput {
+  email: String!
+  password: String!
+  repeatPassword: String!
+  userName: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+type LoginResponse {
+  accessToken: String!
+}
+
+type LogoutResponse {
+  message: String!
+}
+
+type Mutation {
+  generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
+  login(loginInput: LoginInput!): LoginResponse!
+  logout(logoutOfAllDevice: Boolean!, refreshToken: String!): LogoutResponse!
+  register(createUserInput: CreateUserInput!): UserType!
+  resendOtp(verifyOtp: ResendOtpInput!): ResendOtpResponse!
+  verifyOtp(verifyOtp: VerifyOtpInput!): VerifyOtpResponse!
+}
+
+type Profile {
+  avatar: String
+  bio: String
+  hobbies: [String]!
+  phoneNumber: Int
+  showPhoneNumber: Boolean!
+}
+
+type Query {
+  me: UserType!
+  user(id: String!): UserType!
+}
+
+type RefreshTokenResponse {
+  accessToken: String!
+}
+
+input ResendOtpInput {
+  otpType: String!
+  userId: String!
+}
+
+type ResendOtpResponse {
+  message: String!
+  userId: String!
+}
+
+type UserType {
+  blockUser: Boolean!
+  email: String!
+  followers: [UserType]!
+  following: [UserType]!
+  id: ID!
+  isEmailVerified: Boolean!
+  mfaEnabled: Boolean!
+  profile: Profile!
+  role: String!
+  userName: String!
+  userPostCount: Int!
+}
+
+input VerifyOtpInput {
+  otp: String!
+  otpType: String!
+  userId: String!
+}
+
+type VerifyOtpResponse {
+  message: String!
+  otpId: String
+}
