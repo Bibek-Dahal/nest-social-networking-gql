@@ -13,20 +13,26 @@ import { User, UserDocument } from 'src/users/schema/user.schema';
 import { verificationEmailLifeTime } from 'src/constants';
 import { OtpType } from './emums/otp-type.enum';
 import { JwtService } from '@nestjs/jwt';
-
+import { v4 as uuidv4 } from 'uuid';
 import { Otp, OtpTokenDocument } from './schema/otp-token.schema';
 
 import {
   CreateUserInput,
   LoginInput,
+  PasswordChangeInput,
+  PasswordResetInput,
+  ReqPwdResetInput,
   ResendOtpInput,
   VerifyOtpInput,
 } from './dto/inputs/auth-resolvers.input';
 import {
   LogoutResponse,
+  PasswordChangeResponse,
+  PwdReqEmailResponse,
   RefreshTokenResponse,
   VerifyOtpResponse,
 } from './dto/responses/auth-resolver-responses';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -36,6 +42,7 @@ export class AuthService {
     private readonly otpRepository: OtpRepository,
     private readonly emailService: EmailService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async create(createUserInput: CreateUserInput) {
@@ -119,6 +126,9 @@ export class AuthService {
     const { email, password } = loginInput;
     console.log('login-input==', loginInput);
     const user = await this.validateUser(email, password);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
     console.log('user===', user);
 
     // Uncomment and implement MFA logic if needed
@@ -133,10 +143,17 @@ export class AuthService {
     //     data: `${encryptedUserId}`,
     //   };
     // }
+    const uuid = uuidv4();
+    await this.jwtTokenRepository.create({ userId: user.id, uuid: uuid });
 
-    const payload = { sub: user.id };
+    const accessPayload = { sub: user.id };
+    const refreshPayload = { sub: user.id, uuid: uuid };
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken: this.jwtService.sign(accessPayload),
+      refreshToken: this.jwtService.sign(refreshPayload, {
+        secret: this.configService.get('JWT_REFRESH_SECRET'),
+        expiresIn: '15d',
+      }),
     };
 
     // const tokens = await JwtUtility.generateJwtTokens(user.id);
@@ -219,7 +236,10 @@ export class AuthService {
   async generateNewAccesstoken(
     refreshToken: string,
   ): Promise<RefreshTokenResponse> {
-    const jwtToken = await JwtUtility.verifyJwtToken(refreshToken);
+    console.log('jwt-secret==', this.configService.get('JWT_REFRESH_SECRET'));
+    const jwtToken = await this.jwtService.verifyAsync(refreshToken, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+    });
 
     console.log('jwt-token==', jwtToken);
 
@@ -233,9 +253,8 @@ export class AuthService {
       );
     }
 
-    const newAccessToken = await JwtUtility.generateAccessToken(
-      jwtToken.userId,
-    );
+    const accessPayload = { sub: jwtToken.sub };
+    const newAccessToken = this.jwtService.sign(accessPayload);
     return {
       accessToken: newAccessToken,
     };
@@ -245,7 +264,9 @@ export class AuthService {
     refreshToken: string,
     logoutOfAllDevice: boolean,
   ): Promise<LogoutResponse> {
-    const jwtToken = await JwtUtility.verifyJwtToken(refreshToken);
+    const jwtToken = await this.jwtService.verifyAsync(refreshToken, {
+      secret: this.configService.get('JWT_REFRESH_SECRET'),
+    });
 
     if (!jwtToken) {
       throw new BadRequestException('Token Expired');
@@ -264,5 +285,95 @@ export class AuthService {
         message: 'User logout successfull',
       };
     }
+  }
+
+  async passwordChange(
+    passwordChangeInput: PasswordChangeInput,
+    user: UserDocument,
+  ): Promise<LogoutResponse> {
+    const { password, repeatPassword, logoutOfAllDevice } = passwordChangeInput;
+
+    user.password = password;
+    await user.save();
+    if (logoutOfAllDevice) {
+      await this.jwtTokenRepository.deleteUserAllTokens(user.id);
+    }
+
+    return {
+      message: 'Password change successfull',
+    };
+  }
+
+  async passwordResetRequest(
+    requestPwdResetInput: ReqPwdResetInput,
+  ): Promise<PwdReqEmailResponse> {
+    const { email } = requestPwdResetInput;
+    const user = await this.userRepository.findUserWithEmail(email);
+    if (!user) {
+      return {
+        message: 'Email sent.',
+      };
+    }
+    const otp = generateOTP();
+    const otpObj = await this.otpRepository.create({
+      user: user.id,
+      otp: otp,
+      otpType: OtpType.PasswordResetOtp,
+    });
+
+    console.log('otp-obj=====', otpObj);
+
+    this.emailService.sendMail({
+      user: user,
+      subject: 'Password reset email',
+      token: otp,
+    });
+    const payload = {
+      userId: user.id,
+      oid: otpObj.id,
+    };
+    const token = await this.jwtService.signAsync(payload, {
+      expiresIn: '5m',
+    });
+
+    return {
+      message: 'Password reset email sent.',
+      token: token,
+      userId: user.id,
+    };
+  }
+
+  async passwordReset(
+    requestPwdResetInput: PasswordResetInput,
+  ): Promise<PasswordChangeResponse> {
+    const { password, repeatPassword, token } = requestPwdResetInput;
+    let decodedToken;
+    try {
+      decodedToken = await this.jwtService.verifyAsync(token);
+    } catch (error) {
+      throw new BadRequestException('Token expired');
+    }
+    const { userId, oid } = decodedToken;
+
+    const user = await this.userRepository.findById(userId);
+    const otpObj = await this.otpRepository.findById(oid);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (!otpObj) {
+      throw new BadRequestException('Token expired');
+    }
+
+    if (!otpObj.isUsed) {
+      throw new BadRequestException('Please validate otp');
+    }
+    await otpObj.deleteOne();
+
+    user.password = password;
+    await user.save();
+    return {
+      message: 'Password reset successfull',
+    };
   }
 }

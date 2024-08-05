@@ -16,6 +16,7 @@ input LoginInput {
 
 type LoginResponse {
   accessToken: String!
+  refreshToken: String!
 }
 
 type LogoutResponse {
@@ -26,9 +27,28 @@ type Mutation {
   generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
   login(loginInput: LoginInput!): LoginResponse!
   logout(logoutOfAllDevice: Boolean!, refreshToken: String!): LogoutResponse!
+  passwordChange(passwordChangeInput: PasswordChangeInput!): PasswordChangeResponse!
+  passwordReset(requestPwdResetInput: PasswordResetInput!): PwdReqEmailResponse!
   register(createUserInput: CreateUserInput!): UserType!
+  requestPassowrdReset(requestPwdResetInput: ReqPwdResetInput!): PwdReqEmailResponse!
   resendOtp(verifyOtp: ResendOtpInput!): ResendOtpResponse!
   verifyOtp(verifyOtp: VerifyOtpInput!): VerifyOtpResponse!
+}
+
+input PasswordChangeInput {
+  logoutOfAllDevice: Boolean!
+  password: String!
+  repeatPassword: String!
+}
+
+type PasswordChangeResponse {
+  message: String!
+}
+
+input PasswordResetInput {
+  password: String!
+  repeatPassword: String!
+  token: String!
 }
 
 type Profile {
@@ -39,6 +59,12 @@ type Profile {
   showPhoneNumber: Boolean!
 }
 
+type PwdReqEmailResponse {
+  message: String
+  token: String
+  userId: String
+}
+
 type Query {
   me: UserType!
   user(id: String!): UserType!
@@ -46,6 +72,10 @@ type Query {
 
 type RefreshTokenResponse {
   accessToken: String!
+}
+
+input ReqPwdResetInput {
+  email: String!
 }
 
 input ResendOtpInput {

@@ -1,5 +1,12 @@
 import { InputType, Int, Field, PartialType } from '@nestjs/graphql';
-import { IsString, IsInt, IsEmail, Matches, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsInt,
+  IsEmail,
+  Matches,
+  IsNotEmpty,
+  IsSemVer,
+} from 'class-validator';
 import { OtpType } from 'src/auth/emums/otp-type.enum';
 import { Match } from 'src/users/decorators/password.decorator';
 
@@ -32,6 +39,52 @@ export class CreateUserInput {
 }
 
 @InputType()
+export class PasswordChangeInput {
+  @Field()
+  @IsNotEmpty()
+  password: string;
+
+  @Field()
+  @IsNotEmpty()
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$/,
+    {
+      message:
+        'Password must contain atleast one digit, one special character, one uppercase and one lowercase letter',
+    },
+  )
+  @Match('password', { message: 'Passwords do not match' })
+  repeatPassword: string;
+
+  @Field()
+  @IsNotEmpty()
+  logoutOfAllDevice: boolean;
+}
+
+@InputType()
+export class PasswordResetInput {
+  @Field()
+  @IsNotEmpty()
+  password: string;
+
+  @Field()
+  @IsNotEmpty()
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$/,
+    {
+      message:
+        'Password must contain atleast one digit, one special character, one uppercase and one lowercase letter',
+    },
+  )
+  @Match('password', { message: 'Passwords do not match' })
+  repeatPassword: string;
+
+  @Field()
+  @IsNotEmpty()
+  token: string;
+}
+
+@InputType()
 export class LoginInput {
   @Field()
   @IsNotEmpty()
@@ -46,6 +99,13 @@ export class LoginInput {
 export class UpdateUserInput extends PartialType(CreateUserInput) {
   @Field(() => Int)
   id: number;
+}
+
+@InputType()
+export class ReqPwdResetInput {
+  @Field()
+  @IsEmail()
+  email: string;
 }
 
 @InputType()

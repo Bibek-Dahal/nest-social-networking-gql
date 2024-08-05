@@ -22,14 +22,18 @@ export class EmailService {
       text = `We noticed that you requested to reset your password.If you did not request this password reset, please ignore this email. Your account security is important to us, and we take every measure to ensure your information remains safe. Token ${option.token}`;
     }
 
-    const info = await this.transporter.sendMail({
-      from: 'abc@gmail.com', // sender address
-      to: option.user.email, // list of receivers
-      subject: option.subject, // Subject line
+    try {
+      const info = await this.transporter.sendMail({
+        from: 'abc@gmail.com', // sender address
+        to: option.user.email, // list of receivers
+        subject: option.subject, // Subject line
 
-      text: text, // html body
-    });
+        text: text, // html body
+      });
 
-    console.log('Message sent: %s', info.messageId);
+      console.log('Message sent: %s', info.messageId);
+    } catch (error) {
+      console.log('*****cant send email******');
+    }
   };
 }

@@ -6,18 +6,26 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
   CreateUserInput,
   LoginInput,
+  PasswordChangeInput,
+  PasswordResetInput,
+  ReqPwdResetInput,
   ResendOtpInput,
   VerifyOtpInput,
 } from './dto/inputs/auth-resolvers.input';
 import {
   LoginResponse,
   LogoutResponse,
+  PasswordChangeResponse,
+  PwdReqEmailResponse,
   RefreshTokenResponse,
   ResendOtpResponse,
   VerifyOtpResponse,
 } from './dto/responses/auth-resolver-responses';
 import { UserType } from 'src/users/entities/user.entity';
 import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from './guards/graphql-auth.guard';
+import { UserDocument } from 'src/users/schema/user.schema';
+import { CurrentUser } from './decorators/current-user.decorator';
 
 @Resolver('Auth')
 export class AuthResolver {
@@ -29,6 +37,7 @@ export class AuthResolver {
   }
 
   // @UseGuards(JwtAuthGuard)
+
   @Mutation(() => LoginResponse)
   login(@Args('loginInput') loginInput: LoginInput) {
     return this.authService.login(loginInput);
@@ -55,5 +64,28 @@ export class AuthResolver {
     @Args('logoutOfAllDevice') logoutOfAllDevice: boolean = false,
   ) {
     return this.authService.logout(refreshToken, logoutOfAllDevice);
+  }
+
+  @Mutation(() => PasswordChangeResponse)
+  @UseGuards(GqlAuthGuard)
+  passwordChange(
+    @CurrentUser() user: UserDocument,
+    @Args('passwordChangeInput') passwordChangeInput: PasswordChangeInput,
+  ) {
+    return this.authService.passwordChange(passwordChangeInput, user);
+  }
+
+  @Mutation(() => PwdReqEmailResponse)
+  requestPassowrdReset(
+    @Args('requestPwdResetInput') requestPwdResetInput: ReqPwdResetInput,
+  ) {
+    return this.authService.passwordResetRequest(requestPwdResetInput);
+  }
+
+  @Mutation(() => PwdReqEmailResponse)
+  passwordReset(
+    @Args('requestPwdResetInput') requestPwdResetInput: PasswordResetInput,
+  ) {
+    return this.authService.passwordReset(requestPwdResetInput);
   }
 }

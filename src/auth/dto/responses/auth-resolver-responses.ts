@@ -15,8 +15,8 @@ export class LoginResponse {
   @Field()
   accessToken: string;
 
-  // @Field()
-  // refreshToken: string;
+  @Field()
+  refreshToken: string;
 
   // @Field()
   // user: UserType;
@@ -41,4 +41,22 @@ export class LogoutResponse {
 export class RefreshTokenResponse {
   @Field()
   accessToken: string;
+}
+
+@ObjectType()
+export class PasswordChangeResponse {
+  @Field()
+  message: string;
+}
+
+@ObjectType()
+export class PwdReqEmailResponse {
+  @Field({ nullable: true })
+  message?: string;
+
+  @Field({ nullable: true })
+  token?: string;
+
+  @Field({ nullable: true })
+  userId?: string;
 }

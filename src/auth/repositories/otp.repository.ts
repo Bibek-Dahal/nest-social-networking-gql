@@ -14,8 +14,7 @@ export class OtpRepository {
     user: string;
     otp: string;
     otpType: OtpType;
-  }): Promise<Otp> {
-    console.log('options==', options);
+  }): Promise<OtpTokenDocument> {
     const otp = new this.optModel(options);
     return otp.save();
   }
