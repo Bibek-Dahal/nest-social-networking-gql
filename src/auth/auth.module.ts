@@ -10,17 +10,25 @@ import { JwtTokenRepository } from './repositories/jwt.repository';
 import { OtpRepository } from './repositories/otp.repository';
 import { LocalStrategy } from './stratigies/local.strategy';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { jwtConstants } from 'src/constants';
 import { JwtStrategy } from './stratigies/jwt.strategy';
+import { ConfigModule } from '@nestjs/config/dist/config.module';
+import { ConfigService } from '@nestjs/config';
 @Module({
   imports: [
     UsersModule,
     EmailModule,
     PassportModule,
-    JwtModule.register({
-      secret: jwtConstants,
-      signOptions: { expiresIn: '5m' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<JwtModuleOptions> => ({
+        secret: configService.get<string>('JWT_ACCESS_SECRET'),
+        signOptions: { expiresIn: '10m' },
+      }),
+      inject: [ConfigService],
     }),
     MongooseModule.forFeature([
       { name: Otp.name, schema: OtpTokenSchema },

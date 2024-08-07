@@ -21,7 +21,7 @@ import {
   ResendOtpResponse,
   VerifyOtpResponse,
 } from './dto/responses/auth-resolver-responses';
-import { UserType } from 'src/users/entities/user.entity';
+import { UserType } from 'src/users/dto/inputs/users.input';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from './guards/graphql-auth.guard';
 import { UserDocument } from 'src/users/schema/user.schema';

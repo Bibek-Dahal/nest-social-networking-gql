@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { UserType } from 'src/users/entities/user.entity';
+import { UserType } from 'src/users/dto/inputs/users.input';
 
 @ObjectType()
 export class VerifyOtpResponse {

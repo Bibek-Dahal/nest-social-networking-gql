@@ -9,6 +9,7 @@ import { UserRoles } from '../enums/user.enum';
 import jwt from 'jsonwebtoken';
 export type UserDocument = HydratedDocument<User>;
 
+import { Document } from 'mongoose';
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true, unique: true })

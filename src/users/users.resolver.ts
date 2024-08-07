@@ -4,11 +4,11 @@ import {
   CreateUserInput,
   UpdateUserInput,
 } from 'src/auth/dto/inputs/auth-resolvers.input';
-import { UserType } from './entities/user.entity';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from 'src/auth/guards/graphql-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserDocument } from './schema/user.schema';
+import { UserType } from './dto/inputs/users.input';
 
 @Resolver(() => UserType)
 export class UsersResolver {
@@ -19,13 +19,19 @@ export class UsersResolver {
   //   return this.usersService.create(createUserInput);
   // }
 
-  // @Query(() => [UserType], { name: 'users' })
-  // findAll() {
-  //   return this.usersService.findAll();
-  // }
+  @Query(() => [UserType], { name: 'listAllUsers' })
+  @UseGuards(GqlAuthGuard)
+  findAll() {
+    return this.usersService.findAll();
+  }
 
-  @Query(() => UserType, { name: 'user' })
+  @Query(() => UserType, { name: 'getUserById' })
   findOne(@Args('id') id: string) {
+    return this.usersService.findOne(id);
+  }
+
+  @Query(() => UserType, { name: 'updateUser' })
+  updateUser(@Args('id') id: string) {
     return this.usersService.findOne(id);
   }
 

@@ -24,4 +24,8 @@ export class UserRepository {
   async findUserWithUserName(userName: string): Promise<UserDocument> {
     return this.userModel.findOne({ userName: userName });
   }
+
+  async findAll(): Promise<UserDocument[]> {
+    return this.userModel.find({});
+  }
 }

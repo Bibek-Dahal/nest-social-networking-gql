@@ -32,6 +32,7 @@ type Mutation {
   register(createUserInput: CreateUserInput!): UserType!
   requestPassowrdReset(requestPwdResetInput: ReqPwdResetInput!): PwdReqEmailResponse!
   resendOtp(verifyOtp: ResendOtpInput!): ResendOtpResponse!
+  updateProfile(id: String!, updateProfileInput: UpdateProfileInput!): String!
   verifyOtp(verifyOtp: VerifyOtpInput!): VerifyOtpResponse!
 }
 
@@ -66,8 +67,10 @@ type PwdReqEmailResponse {
 }
 
 type Query {
+  getUserById(id: String!): UserType!
+  listAllUsers: [UserType!]!
   me: UserType!
-  user(id: String!): UserType!
+  updateUser(id: String!): UserType!
 }
 
 type RefreshTokenResponse {
@@ -87,6 +90,13 @@ type ResendOtpResponse {
   message: String!
   userId: String!
 }
+
+input UpdateProfileInput {
+  avatar: Upload!
+}
+
+"""The `Upload` scalar type represents a file upload."""
+scalar Upload
 
 type UserType {
   blockUser: Boolean!
