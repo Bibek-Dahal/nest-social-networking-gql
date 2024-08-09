@@ -14,34 +14,46 @@ export class UsersService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async create(createUserInput: CreateUserInput) {
-    const userWithEmail = await this.userRepository.findUserWithEmail(
-      createUserInput.email,
-    );
-    const userWithUserName = await this.userRepository.findUserWithUserName(
-      createUserInput.userName,
-    );
+    try {
+      const userWithEmail = await this.userRepository.findUserWithEmail(
+        createUserInput.email,
+      );
+      const userWithUserName = await this.userRepository.findUserWithUserName(
+        createUserInput.userName,
+      );
 
-    if (userWithEmail) {
-      throw new BadRequestException('User with email already exists');
+      if (userWithEmail) {
+        throw new BadRequestException('User with email already exists');
+      }
+
+      if (userWithUserName) {
+        throw new BadRequestException('User with username already exists');
+      }
+
+      return this.userRepository.create(createUserInput);
+    } catch (err) {
+      throw err;
     }
-
-    if (userWithUserName) {
-      throw new BadRequestException('User with username already exists');
-    }
-
-    return this.userRepository.create(createUserInput);
   }
 
   findAll() {
-    return this.userRepository.findAll();
+    try {
+      return this.userRepository.findAll();
+    } catch (err) {
+      throw err;
+    }
   }
 
   async findOne(id: string) {
-    const user = await this.userRepository.findById(id);
-    if (!user) {
-      return new NotFoundException('user not found');
+    try {
+      const user = await this.userRepository.findById(id);
+      if (!user) {
+        return new NotFoundException('user not found');
+      }
+      return user;
+    } catch (err) {
+      throw err;
     }
-    return user;
   }
 
   update(id: number, updateUserInput: UpdateUserInput) {
