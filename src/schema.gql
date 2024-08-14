@@ -2,6 +2,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input CreatePostInput {
+  description: String
+  image: Upload
+  title: String!
+}
+
 input CreateUserInput {
   email: String!
   password: String!
@@ -24,8 +30,10 @@ type LogoutResponse {
 }
 
 type Mutation {
+  createPost(createPostInput: CreatePostInput!): PostType!
   generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
   login(loginInput: LoginInput!): LoginResponse!
+  loginWithGoogle(accessToken: String!): String!
   logout(logoutOfAllDevice: Boolean!, refreshToken: String!): LogoutResponse!
   passwordChange(passwordChangeInput: PasswordChangeInput!): PasswordChangeResponse!
   passwordReset(requestPwdResetInput: PasswordResetInput!): PwdReqEmailResponse!
@@ -50,6 +58,15 @@ input PasswordResetInput {
   password: String!
   repeatPassword: String!
   token: String!
+}
+
+type PostType {
+  commentCount: Int!
+  description: String
+  image: Upload
+  likeCount: Int!
+  title: String!
+  user: UserType!
 }
 
 type Profile {

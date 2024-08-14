@@ -4,6 +4,7 @@ import { User } from 'src/users/schema/user.schema';
 import { OtpType } from '../emums/otp-type.enum';
 export type JwtTokenDocument = HydratedDocument<Jwt>;
 import { Document } from 'mongoose';
+
 @Schema({ timestamps: true })
 export class Jwt {
   @Prop({

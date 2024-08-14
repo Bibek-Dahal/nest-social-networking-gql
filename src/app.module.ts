@@ -11,6 +11,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { ProfileModule } from './profile/profile.module';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ProfileModule } from './profile/profile.module';
       plugins: [ApolloServerPluginLandingPageLocalDefault()],
     }),
     AuthModule,
+    PostModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -12,7 +12,7 @@ import { User, UserDocument } from 'src/users/schema/user.schema';
 import { OtpType } from './emums/otp-type.enum';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
-
+import axios from 'axios';
 import {
   CreateUserInput,
   LoginInput,
@@ -30,6 +30,7 @@ import {
   VerifyOtpResponse,
 } from './dto/responses/auth-resolver-responses';
 import { ConfigService } from '@nestjs/config';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -76,6 +77,68 @@ export class AuthService {
     } catch (err) {
       throw err;
     }
+  }
+
+  async validateSocailUser(profile: any): Promise<UserDocument> {
+    try {
+      // Look up the user by email or other unique identifier
+      const existingUser = await this.userRepository.findUserWithEmail(
+        profile.email,
+      );
+
+      if (existingUser) {
+        // User already exists
+        return existingUser;
+      }
+
+      // If user does not exist, create a new user
+      const newUser: CreateUserInput = {
+        email: profile.email,
+        password: 'abcd',
+        repeatPassword: 'abcd',
+        userName: profile.email.split('@')[0], // Simple username generation
+        // Add any other fields you need to populate here
+      };
+
+      const createdUser = await this.userRepository.create(newUser);
+
+      return createdUser;
+    } catch (error) {
+      throw new BadRequestException(
+        `Failed to validate or create user: ${error.message}`,
+      );
+    }
+  }
+
+  async getUserFromGoogleToken(accessToken: string): Promise<any> {
+    const client = new OAuth2Client();
+    const CLIENT_ID = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    async function verify() {
+      const ticket = await client.verifyIdToken({
+        idToken: accessToken,
+        audience: CLIENT_ID, // Specify the CLIENT_ID of the app that accesses the backend
+        // Or, if multiple clients access the backend:
+        //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
+      });
+      const payload = ticket.getPayload();
+      // console.log('payload====', payload);
+      const userid = payload['sub'];
+      return payload;
+      // If the request specified a Google Workspace domain:
+      // const domain = payload['hd'];
+    }
+    let userInfo;
+    verify()
+      .then((value) => {
+        console.log('value========', value);
+        userInfo = value;
+      })
+      .catch(console.error);
+
+    return userInfo;
+  }
+  catch(error) {
+    throw new BadRequestException('Failed to fetch user profile from Google');
   }
 
   async validateUser(

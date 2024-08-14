@@ -43,6 +43,18 @@ export class AuthResolver {
     return this.authService.login(loginInput);
   }
 
+  @Mutation(() => String)
+  async loginWithGoogle(
+    @Args('accessToken') accessToken: string,
+  ): Promise<string> {
+    // Use AuthService to validate the token and get user info
+    const user = await this.authService.getUserFromGoogleToken(accessToken);
+    console.log('user======', user);
+    // Generate and return JWT or handle session here
+    return 'Login successfull';
+    // this.authService.generateJwt(user);
+  }
+
   @Mutation(() => VerifyOtpResponse)
   verifyOtp(@Args('verifyOtp') verifyOtpInput: VerifyOtpInput) {
     return this.authService.verifyOtp(verifyOtpInput);

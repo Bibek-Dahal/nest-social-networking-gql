@@ -11,10 +11,10 @@ import { OtpRepository } from './repositories/otp.repository';
 import { LocalStrategy } from './stratigies/local.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
-import { jwtConstants } from 'src/constants';
 import { JwtStrategy } from './stratigies/jwt.strategy';
 import { ConfigModule } from '@nestjs/config/dist/config.module';
 import { ConfigService } from '@nestjs/config';
+import { GoogleStrategy } from './stratigies/google.strategy';
 @Module({
   imports: [
     UsersModule,
@@ -43,6 +43,7 @@ import { ConfigService } from '@nestjs/config';
     OtpRepository,
     LocalStrategy,
     JwtStrategy,
+    GoogleStrategy,
   ],
   // exports: [AuthService],
 })
