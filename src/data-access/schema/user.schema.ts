@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import { refreshTokenLifeTime } from 'src/constants';
 import { accessTokenLifeTime } from 'src/constants';
 import { v4 as uuidv4 } from 'uuid';
-import { UserRoles } from '../enums/user.enum';
+import { UserRoles } from '../../users/enums/user.enum';
 import jwt from 'jsonwebtoken';
 export type UserDocument = HydratedDocument<User>;
 
@@ -44,6 +44,19 @@ export class User {
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
   following: User[];
+
+  @Prop(
+    raw({
+      type: [
+        {
+          provider: { type: String },
+          uid: { type: String },
+        },
+      ],
+      default: [],
+    }),
+  )
+  socailAccount: Record<string, any>;
 
   @Prop(
     raw({

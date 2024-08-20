@@ -23,6 +23,7 @@ input LoginInput {
 type LoginResponse {
   accessToken: String!
   refreshToken: String!
+  user: UserType!
 }
 
 type LogoutResponse {
@@ -33,7 +34,7 @@ type Mutation {
   createPost(createPostInput: CreatePostInput!): PostType!
   generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
   login(loginInput: LoginInput!): LoginResponse!
-  loginWithGoogle(accessToken: String!): String!
+  loginWithGoogle(accessToken: String!): LoginResponse!
   logout(logoutOfAllDevice: Boolean!, refreshToken: String!): LogoutResponse!
   passwordChange(passwordChangeInput: PasswordChangeInput!): PasswordChangeResponse!
   passwordReset(requestPwdResetInput: PasswordResetInput!): PwdReqEmailResponse!

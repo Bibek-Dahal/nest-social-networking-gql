@@ -18,8 +18,8 @@ export class LoginResponse {
   @Field()
   refreshToken: string;
 
-  // @Field()
-  // user: UserType;
+  @Field()
+  user: UserType;
 }
 
 @ObjectType()

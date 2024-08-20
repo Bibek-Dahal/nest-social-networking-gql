@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { UserRepository } from './user.repository';
+import { UserRepository } from 'src/data-access/repository';
 import {
   CreateUserInput,
   UpdateUserInput,
@@ -15,12 +15,12 @@ export class UsersService {
 
   async create(createUserInput: CreateUserInput) {
     try {
-      const userWithEmail = await this.userRepository.findUserWithEmail(
-        createUserInput.email,
-      );
-      const userWithUserName = await this.userRepository.findUserWithUserName(
-        createUserInput.userName,
-      );
+      const userWithEmail = await this.userRepository.findOne({
+        email: createUserInput.email,
+      });
+      const userWithUserName = await this.userRepository.findOne({
+        userName: createUserInput.userName,
+      });
 
       if (userWithEmail) {
         throw new BadRequestException('User with email already exists');
@@ -38,7 +38,7 @@ export class UsersService {
 
   findAll() {
     try {
-      return this.userRepository.findAll();
+      return this.userRepository.find({});
     } catch (err) {
       throw err;
     }

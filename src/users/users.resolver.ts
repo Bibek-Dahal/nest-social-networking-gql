@@ -7,7 +7,7 @@ import {
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from 'src/auth/guards/graphql-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { UserDocument } from './schema/user.schema';
+import { UserDocument } from '../data-access/schema/user.schema';
 import { UserType } from './dto/inputs/users.input';
 
 @Resolver(() => UserType)

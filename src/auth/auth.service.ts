@@ -3,12 +3,18 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { UserRepository } from 'src/users/user.repository';
+// import { UserRepository } from 'src/users/user.repository';
+// import { JwtTokenRepository } from './repositories/jwt.repository';
+// import { OtpRepository } from './repositories/otp.repository';
+import {
+  UserRepository,
+  OtpRepository,
+  JwtTokenRepository,
+} from '../data-access/repository';
+
 import { EmailService } from 'src/email/email.service';
 import { generateOTP } from 'src/utils/otp';
-import { JwtTokenRepository } from './repositories/jwt.repository';
-import { OtpRepository } from './repositories/otp.repository';
-import { User, UserDocument } from 'src/users/schema/user.schema';
+import { User, UserDocument } from 'src/data-access/schema/user.schema';
 import { OtpType } from './emums/otp-type.enum';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,6 +29,7 @@ import {
   VerifyOtpInput,
 } from './dto/inputs/auth-resolvers.input';
 import {
+  LoginResponse,
   LogoutResponse,
   PasswordChangeResponse,
   PwdReqEmailResponse,
@@ -31,6 +38,8 @@ import {
 } from './dto/responses/auth-resolver-responses';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
+import { generatePassword } from 'src/utils/generate-password';
+import { SocialAccount } from 'src/users/types/socail-account.type';
 
 @Injectable()
 export class AuthService {
@@ -44,13 +53,12 @@ export class AuthService {
   ) {}
 
   async create(createUserInput: CreateUserInput) {
+    const { email, userName } = createUserInput;
     try {
-      const userWithEmail = await this.userRepository.findUserWithEmail(
-        createUserInput.email,
-      );
-      const userWithUserName = await this.userRepository.findUserWithUserName(
-        createUserInput.userName,
-      );
+      const userWithEmail = await this.userRepository.findOne({ email: email });
+      const userWithUserName = await this.userRepository.findOne({
+        userName: userName,
+      });
 
       if (userWithEmail) {
         throw new BadRequestException('User with email already exists');
@@ -82,9 +90,9 @@ export class AuthService {
   async validateSocailUser(profile: any): Promise<UserDocument> {
     try {
       // Look up the user by email or other unique identifier
-      const existingUser = await this.userRepository.findUserWithEmail(
-        profile.email,
-      );
+      const existingUser = await this.userRepository.findOne({
+        email: profile.email,
+      });
 
       if (existingUser) {
         // User already exists
@@ -110,7 +118,7 @@ export class AuthService {
     }
   }
 
-  async getUserFromGoogleToken(accessToken: string): Promise<any> {
+  async loginUserWithGoogle(accessToken: string) {
     const client = new OAuth2Client();
     const CLIENT_ID = this.configService.get<string>('GOOGLE_CLIENT_ID');
     async function verify() {
@@ -121,23 +129,57 @@ export class AuthService {
         //[CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]
       });
       const payload = ticket.getPayload();
-      // console.log('payload====', payload);
-      const userid = payload['sub'];
-      return payload;
-      // If the request specified a Google Workspace domain:
-      // const domain = payload['hd'];
-    }
-    let userInfo;
-    verify()
-      .then((value) => {
-        console.log('value========', value);
-        userInfo = value;
-      })
-      .catch(console.error);
 
-    return userInfo;
+      return payload;
+    }
+    const payload = await verify();
+    // console.log('payload==', payload);
+
+    const userWithGoogle: UserDocument =
+      await this.userRepository.findUserWithGoogleId(payload.sub);
+
+    if (userWithGoogle == null) {
+      const userWithEmail = await this.userRepository.findOne({
+        email: payload.email,
+      });
+      console.log('user with email===', userWithEmail);
+      if (userWithEmail) {
+        throw new BadRequestException('User with email account already exists');
+      }
+
+      const userName = createUsername(payload.email, payload.sub);
+      const password = generatePassword(8);
+
+      const user: UserDocument = await this.userRepository.create({
+        userName: userName,
+        email: payload.email,
+        password: password,
+        socailAccount: [
+          {
+            uid: payload.sub,
+            provider: 'google',
+          },
+        ],
+      });
+
+      const loginTokens = await this.loginUserWithSocialAccount(user);
+
+      return { ...loginTokens, user };
+    } else {
+      const loginTokens = await this.loginUserWithSocialAccount(userWithGoogle);
+
+      return { ...loginTokens, user: userWithGoogle };
+    }
+
+    function createUsername(email: string, sub: string): string {
+      const emailPrefix = email.split('.')[0]; // Take the first part of the email before the '.'
+      const subSuffix = sub.substring(0, 6); // Take the first 6 characters of the 'sub'
+
+      const username = `${emailPrefix}${subSuffix}`;
+      return username;
+    }
   }
-  catch(error) {
+  catch(error: any) {
     throw new BadRequestException('Failed to fetch user profile from Google');
   }
 
@@ -146,8 +188,9 @@ export class AuthService {
     password: string,
   ): Promise<UserDocument> {
     try {
-      const user: UserDocument =
-        await this.userRepository.findUserWithEmail(username);
+      const user: UserDocument = await this.userRepository.findOne({
+        email: username,
+      });
       if (!user) {
         throw new UnauthorizedException(
           'The provided credentials do not match our records',
@@ -189,6 +232,25 @@ export class AuthService {
     }
   }
 
+  async loginUserWithSocialAccount(user: UserDocument) {
+    try {
+      const uuid = uuidv4();
+      await this.jwtTokenRepository.create({ user: user.id, uuid: uuid });
+
+      const accessPayload = { sub: user.id };
+      const refreshPayload = { sub: user.id, uuid: uuid };
+      return {
+        accessToken: this.jwtService.sign(accessPayload),
+        refreshToken: this.jwtService.sign(refreshPayload, {
+          secret: this.configService.get('JWT_REFRESH_SECRET'),
+          expiresIn: '15d',
+        }),
+      };
+    } catch (err) {
+      throw err;
+    }
+  }
+
   async login(loginInput: LoginInput) {
     try {
       console.log('login route called');
@@ -213,7 +275,7 @@ export class AuthService {
       //   };
       // }
       const uuid = uuidv4();
-      await this.jwtTokenRepository.create({ userId: user.id, uuid: uuid });
+      await this.jwtTokenRepository.create({ user: user.id, uuid: uuid });
 
       const accessPayload = { sub: user.id };
       const refreshPayload = { sub: user.id, uuid: uuid };
@@ -315,7 +377,9 @@ export class AuthService {
       if (!jwtToken) {
         throw new BadRequestException('Token expired');
       }
-      const token = await this.jwtTokenRepository.findOne(jwtToken.uuid);
+      const token = await this.jwtTokenRepository.findOne({
+        uuid: jwtToken.uuid,
+      });
       if (!token) {
         throw new BadRequestException(
           'Cant login with given token. Either token is expired or doesnot exists',
@@ -346,14 +410,14 @@ export class AuthService {
       }
 
       if (logoutOfAllDevice) {
-        this.jwtTokenRepository.deleteUserAllTokens(jwtToken.userId);
+        await this.jwtTokenRepository.deleteMany({ user: jwtToken.userId });
         return {
           message: 'User logged out from all devices',
         };
       } else {
-        const token = await this.jwtTokenRepository.findOneAndDelete(
-          jwtToken.uuid,
-        );
+        const token = await this.jwtTokenRepository.deleteOne({
+          uuid: jwtToken.uuid,
+        });
         return {
           message: 'User logout successfull',
         };
@@ -374,7 +438,7 @@ export class AuthService {
       user.password = password;
       await user.save();
       if (logoutOfAllDevice) {
-        await this.jwtTokenRepository.deleteUserAllTokens(user.id);
+        await this.jwtTokenRepository.deleteMany({ user: user.id });
       }
 
       return {
@@ -390,7 +454,7 @@ export class AuthService {
   ): Promise<PwdReqEmailResponse> {
     try {
       const { email } = requestPwdResetInput;
-      const user = await this.userRepository.findUserWithEmail(email);
+      const user = await this.userRepository.findOne({ email: email });
       if (!user) {
         return {
           message: 'Email sent.',
@@ -407,7 +471,7 @@ export class AuthService {
 
       this.emailService.sendMail({
         user: user,
-        subject: 'Password reset email',
+        subject: 'Password Reset Email',
         token: otp,
       });
       const payload = {

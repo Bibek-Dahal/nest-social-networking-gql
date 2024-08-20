@@ -1,15 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from 'src/users/schema/user.schema';
-import { OtpType } from '../emums/otp-type.enum';
+import { User } from 'src/data-access/schema/user.schema';
+import { OtpType } from '../../auth/emums/otp-type.enum';
 export type JwtTokenDocument = HydratedDocument<Jwt>;
 import { Document } from 'mongoose';
 
 @Schema({ timestamps: true })
 export class Jwt {
   @Prop({
+    // required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   })
   user: User;
 

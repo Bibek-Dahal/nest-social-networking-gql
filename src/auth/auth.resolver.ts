@@ -24,7 +24,7 @@ import {
 import { UserType } from 'src/users/dto/inputs/users.input';
 import { UseGuards } from '@nestjs/common';
 import { GqlAuthGuard } from './guards/graphql-auth.guard';
-import { UserDocument } from 'src/users/schema/user.schema';
+import { UserDocument } from 'src/data-access/schema/user.schema';
 import { CurrentUser } from './decorators/current-user.decorator';
 
 @Resolver('Auth')
@@ -43,15 +43,13 @@ export class AuthResolver {
     return this.authService.login(loginInput);
   }
 
-  @Mutation(() => String)
-  async loginWithGoogle(
-    @Args('accessToken') accessToken: string,
-  ): Promise<string> {
+  @Mutation(() => LoginResponse)
+  async loginWithGoogle(@Args('accessToken') accessToken: string) {
     // Use AuthService to validate the token and get user info
-    const user = await this.authService.getUserFromGoogleToken(accessToken);
-    console.log('user======', user);
+    const tokens = await this.authService.loginUserWithGoogle(accessToken);
+    console.log('user======', tokens);
     // Generate and return JWT or handle session here
-    return 'Login successfull';
+    return tokens;
     // this.authService.generateJwt(user);
   }
 

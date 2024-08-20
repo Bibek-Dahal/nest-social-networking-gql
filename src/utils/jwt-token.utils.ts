@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import { v4 as uuidv4 } from 'uuid';
 import { accessTokenLifeTime, refreshTokenLifeTime } from 'src/constants';
 import jwt from 'jsonwebtoken';
-import { User } from 'src/users/schema/user.schema';
-import { Jwt } from 'src/auth/schema/jwt-token.schema';
+import { User } from 'src/data-access/schema/user.schema';
+import { Jwt } from 'src/data-access/schema/jwt-token.schema';
 
 type JwtPayload = {
   uuid?: string;

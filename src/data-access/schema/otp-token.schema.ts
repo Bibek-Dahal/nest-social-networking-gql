@@ -1,13 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from 'src/users/schema/user.schema';
-import { OtpType } from '../emums/otp-type.enum';
+import { User } from 'src/data-access/schema/user.schema';
+import { OtpType } from '../../auth/emums/otp-type.enum';
 import { Document } from 'mongoose';
 export type OtpTokenDocument = HydratedDocument<Otp>;
 
 @Schema({ timestamps: true })
 export class Otp {
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
   user: User;
 
   @Prop()

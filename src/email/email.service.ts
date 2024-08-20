@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Transporter } from 'nodemailer';
-import { User } from 'src/users/schema/user.schema';
+import { User } from 'src/data-access/schema/user.schema';
 @Injectable()
 export class EmailService {
   constructor(

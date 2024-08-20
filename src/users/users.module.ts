@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './schema/user.schema';
-import { UserRepository } from './user.repository';
+import { User, UserSchema } from '../data-access/schema/user.schema';
+
 import * as bcrypt from 'bcrypt';
 import { UsersResolver } from './users.resolver';
 import { UsersService } from './users.service';
+import { UserRepository } from 'src/data-access/repository';
 
 @Module({
   imports: [
