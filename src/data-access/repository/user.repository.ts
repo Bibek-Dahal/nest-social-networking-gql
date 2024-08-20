@@ -10,11 +10,4 @@ export class UserRepository extends BaseRepo<UserDocument> {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {
     super(userModel);
   }
-
-  async findUserWithGoogleId(uid: string): Promise<UserDocument> {
-    console.log('uid====', uid);
-    return this.userModel.findOne({
-      'socailAccount.uid': uid,
-    });
-  }
 }

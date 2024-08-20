@@ -135,8 +135,9 @@ export class AuthService {
     const payload = await verify();
     // console.log('payload==', payload);
 
-    const userWithGoogle: UserDocument =
-      await this.userRepository.findUserWithGoogleId(payload.sub);
+    const userWithGoogle: UserDocument = await this.userRepository.findOne({
+      'socailAccount.uid': payload.sub,
+    });
 
     if (userWithGoogle == null) {
       const userWithEmail = await this.userRepository.findOne({
