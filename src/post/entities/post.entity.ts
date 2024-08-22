@@ -1,30 +1,7 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-import { User } from 'src/data-access/schema/user.schema';
-export type PostDocument = HydratedDocument<Post>;
+import { ObjectType, Field, Int } from '@nestjs/graphql';
 
-@Schema({ timestamps: true })
+@ObjectType()
 export class Post {
-  @Prop({
-    required: true,
-    type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  })
-  user: User;
-
-  @Prop({ trim: true, required: true })
-  title: string;
-
-  @Prop({ trim: true })
-  description: string;
-
-  @Prop({ default: 0 })
-  likeCount: number;
-
-  @Prop({ default: 0 })
-  commentCount: number;
-
-  @Prop()
-  image: String;
+  @Field(() => Int, { description: 'Example field (placeholder)' })
+  exampleField: number;
 }
-
-export const PostSchema = SchemaFactory.createForClass(Post);

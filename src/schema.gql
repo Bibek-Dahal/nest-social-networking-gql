@@ -3,7 +3,6 @@
 # ------------------------------------------------------
 
 input CreatePostInput {
-  description: String
   image: Upload
   title: String!
 }
@@ -32,6 +31,7 @@ type LogoutResponse {
 
 type Mutation {
   createPost(createPostInput: CreatePostInput!): PostType!
+  createTest(testInput: TestInput!): String!
   generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
   login(loginInput: LoginInput!): LoginResponse!
   loginWithGoogle(accessToken: String!): LoginResponse!
@@ -39,8 +39,10 @@ type Mutation {
   passwordChange(passwordChangeInput: PasswordChangeInput!): PasswordChangeResponse!
   passwordReset(requestPwdResetInput: PasswordResetInput!): PwdReqEmailResponse!
   register(createUserInput: CreateUserInput!): UserType!
+  removePost(id: Int!): Post!
   requestPassowrdReset(requestPwdResetInput: ReqPwdResetInput!): PwdReqEmailResponse!
   resendOtp(verifyOtp: ResendOtpInput!): ResendOtpResponse!
+  updatePost(updatePostInput: UpdatePostInput!): Post!
   updateProfile(id: String!, updateProfileInput: UpdateProfileInput!): String!
   verifyOtp(verifyOtp: VerifyOtpInput!): VerifyOtpResponse!
 }
@@ -59,6 +61,11 @@ input PasswordResetInput {
   password: String!
   repeatPassword: String!
   token: String!
+}
+
+type Post {
+  """Example field (placeholder)"""
+  exampleField: Int!
 }
 
 type PostType {
@@ -88,6 +95,7 @@ type Query {
   getUserById(id: String!): UserType!
   listAllUsers: [UserType!]!
   me: UserType!
+  post(id: Int!): Post!
   updateUser(id: String!): UserType!
 }
 
@@ -107,6 +115,17 @@ input ResendOtpInput {
 type ResendOtpResponse {
   message: String!
   userId: String!
+}
+
+input TestInput {
+  email: String!
+  password: String!
+}
+
+input UpdatePostInput {
+  id: Int!
+  image: Upload
+  title: String
 }
 
 input UpdateProfileInput {

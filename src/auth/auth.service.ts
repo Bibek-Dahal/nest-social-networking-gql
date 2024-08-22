@@ -155,6 +155,7 @@ export class AuthService {
         userName: userName,
         email: payload.email,
         password: password,
+        isEmailVerified: true,
         socailAccount: [
           {
             uid: payload.sub,
@@ -286,6 +287,7 @@ export class AuthService {
           secret: this.configService.get('JWT_REFRESH_SECRET'),
           expiresIn: '15d',
         }),
+        user: user,
       };
     } catch (err) {
       throw err;
