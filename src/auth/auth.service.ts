@@ -156,6 +156,13 @@ export class AuthService {
         email: payload.email,
         password: password,
         isEmailVerified: true,
+        profile: {
+          avatar: payload.picture,
+          phoneNumber: null,
+          showPhoneNumber: false,
+          bio: '',
+          hobbies: [],
+        },
         socailAccount: [
           {
             uid: payload.sub,

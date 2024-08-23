@@ -3,6 +3,7 @@
 # ------------------------------------------------------
 
 input CreatePostInput {
+  description: String
   image: Upload
   title: String!
 }
@@ -31,7 +32,6 @@ type LogoutResponse {
 
 type Mutation {
   createPost(createPostInput: CreatePostInput!): PostType!
-  createTest(testInput: TestInput!): String!
   generateNewAccessToken(refreshToken: String!): RefreshTokenResponse!
   login(loginInput: LoginInput!): LoginResponse!
   loginWithGoogle(accessToken: String!): LoginResponse!
@@ -117,12 +117,8 @@ type ResendOtpResponse {
   userId: String!
 }
 
-input TestInput {
-  email: String!
-  password: String!
-}
-
 input UpdatePostInput {
+  description: String
   id: Int!
   image: Upload
   title: String
